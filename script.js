@@ -97,7 +97,7 @@ let monsters = [
         "button text": ["Attack", "Defend", "Run"],
         "button functions": [() => attack(monsters[0]), defend, run],
         text: "You encounter a slime",
-        source: "./Images/Hammer.jpg"
+        source: "./Images/hammer.jpg"
     },
     {
         name: "Fanged Beast",
