@@ -447,7 +447,7 @@ document.getElementById("displayStatsButton").addEventListener("click", function
     let intCritRate = critRate * intDecimal;
     let intCritATK = critATK * intDecimal;
 
-    displayHealth.textContent = `Health : ${health}`;
+    displayHealth.textContent = `Health : ${Math.round(health)}`;
     displayStatPoints.textContent = `Available stat points : ${statPoints}`
     displayST.textContent = `ST : ${st}`;
     displayDEF.textContent = `DEF : ${def}`;
