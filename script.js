@@ -1,28 +1,41 @@
 let xp = 0;
 let xpRequired = 10;
 let level = 0;
-let statPoints = 0;
+let statPoints = 10;
 let health = 100;
-let gold = 10000;
+let gold = 100;
 let playerDamage;
 let st = 3;
 let def = 3;
 let agility = 5;
 let int = 1;
-let intDecimal = (int+100)/100;
+let intDecimal;
 let critRate = 20;
 let critATK = 100;
-let intCritRate = critRate * intDecimal;
-let intCritATK = critATK * intDecimal;
+let intCritRate;
+let intCritATK;
 let baseATKChance = 100;
 let aquiredWeapons = 0;
 let aquiredItems = 0;
+let aquiredRare = 0;
+let rolledDrop = false;
+let firstInstance = true;
 let ownedSword = false;
 let ownedStaff = false;
 let ownedBow = false;
 let ownedShield = false;
+let ownedSlime = false;
+let ownedWolf = false;
+let ownedScepter = false;
+let ownedStoneFist = false;
+let ownedDetermination = false;
 let achievedCrit = false;
 let dragonSlayed = false;
+
+let invBack = document.createElement("button")
+invBack.textContent = "Back"
+invBack.setAttribute("id", "inventoryBack")
+invBack.style.marginRight = "5px"
 
 let goldText = document.getElementById("goldText")
 let healthText = document.getElementById("healthText")
@@ -33,6 +46,7 @@ const statDisplay = document.getElementById("statDisplay")
 const displayStatsButton = document.getElementById("displayStatsbutton")
 const controls = document.getElementById("controls");
 const mainButtons = document.getElementById("mainButtons");
+const secondButtons = document.getElementById("secondButtons");
 const shopButton = document.getElementById("button1");
 const dungeonButton = document.getElementById("button2");
 const bossButton = document.getElementById("button3");
@@ -90,6 +104,13 @@ const locations = [
             text: "You enter deeper in the dungeon",
             source: "./Images/right.jpg"
         },
+    {
+        name: "Gold exchange",
+        "button text": ["Right corridor", "Deeper in the dungeon", "Go back to town"],
+        "button functions": [gauntlet1, gauntlet2, goTown],
+        text: "As you are in the cave, the path diverges. On the left is a wet and soggy corridor, on the right is an ominious corridor reeking of blood and death",
+        source: "./Images/entrance.jpg"
+    },
 ];
 
 const subLocations = [
@@ -103,9 +124,9 @@ const subLocations = [
     },
     {
         name: "Inventory",
-        "button text": ["Display weapons", "Display items", "Display key items"],
-        "button functions": [displayWeapons, displayItems, displayKey],
-        text: "Where would you like to check",
+        "button text": ["Display weapons", "Display items", "Display rare drops"],
+        "button functions": [displayWeapons, displayItems, displayRare],
+        text: "Where would you like to check?",
         source: "./Images/inventory.jpg"
 
     },
@@ -116,9 +137,16 @@ const inventoryDisplay = [
     {
         name: "Inventory",
         "button text": ["Sword", "Staff", "Bow"],
-        "button functions": [sword, staff, bow],
+        "button functions": [sword, staff, invBow],
         text: "Weapon info",
         source: "./Images/invdis.jpg"
+    },
+    {
+        name: "Rare drops",
+        "button text": ["Slime suit", "Wolf soul", "Golem fist"],
+        "button functions": [suit, soul, fist],
+        text: "Rare weapon info",
+        source: "./Images/square.jpg"
     }
 ]
 
@@ -138,16 +166,16 @@ function attack(monster){
     let sparks = Math.pow(playerDamage, 2.5)
     console.log(`Intial damage ${playerDamage} before crit`);
     let critATKDecimal = (intCritATK+100)/100
-    console.log(critRate);
     let critRoll = Math.round(Math.random()*100)
     let sparksRoll = Math.round(Math.random()*100000)
-    if (critRate > sparksRoll) {
+    if (intCritRate > sparksRoll) {
         playerDamage *= sparks;
         achivedSparks = true;
     }
-    if (intCritRate > critRoll && achivedSparks == false) {
+    if (intCritRate >= critRoll && achivedSparks == false) {
         playerDamage *= critATKDecimal;
         achievedCrit = true;
+        console.log(`Damage ${playerDamage} after crit`);
     }
 
     //Monster damage formula
@@ -217,6 +245,10 @@ function attack(monster){
         goldText.textContent = gold;
         xp += monster.xpReward;
         xpText.textContent = `${xp}/${xpRequired}`;
+        let rollDrop = Math.round(Math.random()*100)
+        if (rollDrop >= monster.rareDropChance) {
+            monster.rareDrop();
+        }
         goTown();
         alert(`You won! You have earned ${monster.goldReward} gold and ${monster.xpReward} xp!`)
         //Refresh monster health
@@ -227,6 +259,10 @@ function attack(monster){
         goldText.textContent = gold;
         xp += monster.xpReward;
         xpText.textContent = xp;
+        let rollDrop = Math.round(Math.random()*100)+100
+        if (rollDrop >= monster.rareDropChance) {
+            monster.rareDrop();
+        }
         alert(`You have slayed the dragon spreading destruction and chaos around the village, your efforts haven't gone unrewarded, with newfound strength and courage, your reputation has soared across the lands. You are now renowned and gifted with the title "Hero" Your journey is now yours to choose.`)
         goTown();
         monster.health = monster.peakHealth
@@ -293,6 +329,8 @@ let monsters = [
         xpReward: 20,
         baseATKChance: 66,
         agility: 20,
+        rareDrop: gainSlimeSuit,
+        rareDropChance: 95,
         "button text": ["Attack", "Defend", "Run"],
         "button functions": [() => attack(monsters[0]), () => defend(monsters[0]), run],
         text: "You encounter a slime",
@@ -310,6 +348,8 @@ let monsters = [
         xpReward: 333,
         baseATKChance: 100,
         agility: 10,
+        rareDrop: gainSlimeSuit,
+        rareDropChance: 10,
         "button text": ["Attack", "Defend", "Run"],
         "button functions": [() => attack(monsters[1]), () => defend(monsters[1]), run],
         text: "You encounter a TREASURE slime",
@@ -327,6 +367,8 @@ let monsters = [
         xpReward: 150,
         baseATKChance: 75,
         agility: 80,
+        rareDrop: gainWolfSoul,
+        rareDropChance: 90,
         "button text": ["Attack", "Defend", "Run"],
         "button functions": [() => attack(monsters[2]), () => defend(monsters[2]), run],
         text: "You encounter a fanged beast",
@@ -344,6 +386,8 @@ let monsters = [
         xpReward: 1500,
         baseATKChance: 90,
         agility: 10,
+        rareDrop: gainStoneFist,
+        rareDropChance: 90,
         "button text": ["Attack", "Defend", "Run"],
         "button functions": [() => attack(monsters[3]), () => defend(monsters[3]), run],
         text: "A massive sentient rock controlled by ominous magic stands before you",
@@ -359,8 +403,10 @@ let monsters = [
         peakHealth: 250,
         goldReward: 1000,
         xpReward: 3000,
-        baseATKChance: 10,
-        agility: 10,
+        baseATKChance: 100,
+        agility: 5,
+        rareDrop: gainScepter,
+        rareDropChance: 90,
         "button text": ["Attack", "Defend", "Run"],
         "button functions": [() => attack(monsters[4]), () => defend(monsters[4]), run],
         text: "A malevolent spellcaster stands in the darkness, any encounter will be hostile",
@@ -378,6 +424,8 @@ let monsters = [
         xpReward: 500000,
         baseATKChance: 90,
         agility: 75,
+        rareDrop: gainDetermination,
+        rareDropChance: 10,
         "button text": ["Attack", "Defend", "Run"],
         "button functions": [() => attack(monsters[5]), () => defend(monsters[5]), run],
         text: "The calamity stands before you",
@@ -441,11 +489,9 @@ document.getElementById("displayStatsButton").addEventListener("click", function
     let pElements = document.querySelectorAll("#statDisplay p");
     let buttonElements = document.querySelectorAll(".incrementer")
 
-    let intDecimal = (int + 100) / 100;
-    let critRate = 20; // Or whatever base crit rate you have
-    let critATK = 100; // Or your base crit ATK value
-    let intCritRate = critRate * intDecimal;
-    let intCritATK = critATK * intDecimal;
+    intDecimal = (int + 100) / 100;
+    intCritRate = critRate * intDecimal;
+    intCritATK = critATK * intDecimal;
 
     displayHealth.textContent = `Health : ${Math.round(health)}`;
     displayStatPoints.textContent = `Available stat points : ${statPoints}`
@@ -454,13 +500,14 @@ document.getElementById("displayStatsButton").addEventListener("click", function
     displayAG.textContent = `AG : ${agility}`;
     displayINT.textContent = `INT : ${int}`
     displayCritR.textContent = `Crit Rate : ${(intCritRate).toFixed(2)}%`
-    displayCritATK.textContent = `Crit ATK : ${intCritATK}%`
+    displayCritATK.textContent = `Crit ATK : ${(intCritATK).toFixed(2)}%`
     pElements.forEach(p => {
         p.style.display = "flex"
     })
     buttonElements.forEach(button => {
         button.style.display = "flex"
     })
+    return intCritATK, intCritRate, intDecimal;
 })
 
 document.getElementById("displayStatsButton").addEventListener("dblclick", function(){
@@ -508,7 +555,20 @@ INTPlus.addEventListener("click", function(){
     }
 })
 
+inventoryButton.addEventListener("click", function() {
+    if (firstInstance) {
+        update(subLocations[1])
+    
+        secondButtons.append(invBack)
+        firstInstance = false;
 
+        invBack.addEventListener("click", function() {
+            update(check)
+            invBack.remove();
+            firstInstance = true;
+        })
+    }
+})
 
 function goTown(){
     //Sets location to be locations
@@ -516,12 +576,18 @@ function goTown(){
     monsterStats.style.display = "none"
     monsterName.style.display = "none"
     monsterHealth.style.display = "none"
+    intDecimal = (int + 100) / 100;
+    intCritRate = critRate * intDecimal;
+    intCritATK = critATK * intDecimal;
     return check = locations[0]
 }
 
 function goStore(){
     levelButton.style.display = "inline"
     inventoryButton.style.display = "inline"
+    intDecimal = (int + 100) / 100;
+    intCritRate = critRate * intDecimal;
+    intCritATK = critATK * intDecimal;
     update(locations[1])
     return check = locations[1]
 }
@@ -529,8 +595,15 @@ function goStore(){
 function goCave(){
     levelButton.style.display = "inline"
     inventoryButton.style.display = "inline"
+    intDecimal = (int + 100) / 100;
+    intCritRate = critRate * intDecimal;
+    intCritATK = critATK * intDecimal;
     update(locations[2])
     return check = locations[2]
+}
+
+function goBack() {
+    update(check)
 }
 
 //Level up increases
@@ -547,9 +620,6 @@ function levelUp() {
 
         //Xp display equates to current xp
         xpText.textContent = `${xp}/${xpRequired}`;
-
-        //Display amount xp required for next level up
-        console.log(xpRequired);
     
         //Level up rewards
         health += 10;
@@ -567,17 +637,21 @@ function buyHealth(){
         gold -= 10;
         goldText.textContent = gold
         health += 20;
-        healthText.textContent = health
+        healthText.textContent = Math.round(health)
     }
     return check = locations[1]
 }
 
 function buyWeapon(){
+
     let bow = document.createElement("button")
     bow.textContent = "Bow"
+    bow.setAttribute("id", "shopBow")
     bow.style.marginRight = "5px"
+
     let shield = document.createElement("button")
     shield.textContent = "Shield"
+    shield.setAttribute("id", "shopShield")
     shield.style.marginRight = "5px"
     update(subLocations[0])
 
@@ -620,19 +694,37 @@ function buyWeapon(){
     mainButtons.insertBefore(shield, bossButton)
     mainButtons.insertBefore(bow, shield)
 
+    let bowShop = document.getElementById("shopBow");
+    let shieldShop = document.getElementById("shopShield");
+
     bossButton.addEventListener("click", function(){
-        bow.style.display = "none"
-        shield.style.display = "none"
+        bowShop.remove();
+        shieldShop.remove();
     })
 
     inventoryButton.addEventListener("click", function(){
-        bow.style.display = "none"
-        shield.style.display = "none"
+        bowShop.remove();
+        shieldShop.remove();
     })
-    inventoryButton.addEventListener("dblclick", function(){
-        bow.style.display = "none"
-        shield.style.display = "none"
-    })
+
+    invBack.addEventListener("click", function() {
+        let existingBow = document.getElementById("shopBow");
+        let existingShield = document.getElementById("shopShield");
+
+        if (existingBow) {
+            existingBow.remove();
+        }
+        if (existingShield) {
+            existingShield.remove();
+        }
+
+        if (check == subLocations[0]) {
+            mainButtons.insertBefore(shield, bossButton);
+            mainButtons.insertBefore(bow, shield);
+        }
+        update(check)
+    });
+
     return check = subLocations[0]
 }
 
@@ -671,22 +763,17 @@ function buyStaff() {
     }
 }
 
-inventoryButton.addEventListener("click", function() {
-    update(subLocations[1])
-})
-inventoryButton.addEventListener("dblclick", function() {
-    update(check)
-})
-
 function displayWeapons(){
     if (aquiredWeapons <= 0) {
         text.textContent = `You have no weapons...`
     }
     else if (aquiredWeapons >= 1) {
         let shieldBlock = document.createElement("button")
+        shieldBlock.setAttribute("id", "ab")
         shieldBlock.textContent = "Shield"
         update(inventoryDisplay[0])
         mainButtons.append(shieldBlock)
+        let displayShieldBlock = document.getElementById("ab")
 
         shieldBlock.addEventListener("click", function(){
             if (ownedShield == true) {
@@ -701,65 +788,206 @@ function displayWeapons(){
             else {
                 text.innerHTML = "You do not own this weapon..."
             }
-            inventoryButton.addEventListener("click", function(){
-                shieldBlock.style.display = "none";
-            })
+        })
+        inventoryButton.addEventListener("click", function(){
+            displayShieldBlock.remove()
+        })
+        invBack.addEventListener("click", function(){
+            displayShieldBlock.remove()
         })
     }
 }
+
+function sword() {
+    if (ownedSword == true) {
+        text.innerHTML = `"The sword is a powerful weapon, combining precision and strength in every strike."
+        <br> Element: Basic 
+        <br> ST Increase: 10+
+        <br> AG Increase: 4+
+        <br> DEF Increase: 2+
+        <br> ATK Type: Physical Pierce & Slash
+        `
+        visual.src = "./Images/output.jpg"
+    }
+    else {
+        text.innerHTML = "You do not own this weapon..."
+    }
+}
+function staff() {
+    if (ownedStaff == true) {
+        text.innerHTML = `"The staff is a magical instrument, harnessing the power of the elements to cast devastating spells."
+        <br> Element: Fire, Wind, Electric, Water, Earth
+        <br> INT Increase: 33+
+        <br> ATK Type: Physical Strike, Magic 
+        `
+        visual.src = "./Images/staff.jpg"
+    } 
+    else {
+        text.innerHTML = "You do not own this weapon..."
+    }
+}
+function invBow() {
+    if (ownedBow == true) {
+        text.innerHTML = `"The bow is a highly versatile weapon, capable of using a variety of arrows to adapt to any combat situation."
+        <br> Element: Versatile 
+        <br> ST Increase: 5+
+        <br> AG Increase: 25+
+        <br> ATK Type: Pierce
+        `
+        visual.src = "./Images/bow.jpg"
+    } 
+    else {
+        text.innerHTML = "You do not own this weapon..."
+    }
+}
+
+function suit() {
+    if (ownedSlime == true) {
+        text.innerHTML = `"Slime suit"
+        <br> Element: Otherwordly
+        <br> DEF Increase: 100+
+        <br> ATK Type: Support
+        `
+        visual.src = "./Images/slime.jpg"
+    }
+}
+function soul() {
+    if (ownedWolf == true) {
+        text.innerHTML = `"Wolf soul"
+        <br> Element: Beastial 
+        <br> AG Increase: 100+
+        <br> ATK Type: Support
+        `
+        visual.src = "./Images/fanged.jpg"
+    }
+}
+function fist() {
+    if (ownedStoneFist == true) {
+        text.innerHTML = `"Golem's fist"
+        <br> Element: Magical 
+        <br> ST Increase: 100+
+        <br> ATK Type: Support
+        `
+        visual.src = "./Images/golem.jpg"
+    }
+}
+
 function displayItems(){
     if (aquiredItems <= 0) {
         text.textContent = `You have no items...`
     }
 }
-function displayKey(){
-    if (aquiredItems <= 0) {
-        text.textContent = `You have no key items...`
+function displayRare(){
+    if (aquiredRare <= 0) {
+        text.textContent = `You have no rare drops...`
+    }
+    else if (aquiredRare >= 1) {
+
+        let scepter = document.createElement("button")
+        scepter.textContent = "Scepter"
+        scepter.setAttribute("id", "invScepter")
+        scepter.style.marginRight = "5px"
+
+        let determination = document.createElement("button")
+        determination.textContent = "Determination"
+        determination.setAttribute("id", "invDeter")
+        determination.style.marginRight = "5px"
+
+        update(inventoryDisplay[1])
+
+        mainButtons.append(scepter)
+        mainButtons.append(determination)
+        let removeScepter = document.getElementById("invScepter")
+        let removeDeter = document.getElementById("invDeter")
+
+        scepter.addEventListener("click", function() {
+            if (ownedScepter == true) {
+                text.innerHTML = `"Scepter"
+                <br> Element: Mystic 
+                <br> INT Increase: 100+
+                <br> ATK Type: Support
+                `
+                visual.src = "./Images/magus.jpg"
+            }
+        })
+
+        determination.addEventListener("click", function() {
+            if (ownedDetermination == true) {
+                text.innerHTML = `"Dragon's determination"
+                <br> Element: Draconic 
+                <br> ALL STAT Increase: 100+
+                <br> ATK Type: Support
+                `
+                visual.src = "./Images/dragon.jpg"
+            }
+        })
+
+        invBack.addEventListener("click", function() {
+            removeScepter.remove()
+            removeDeter.remove()
+        })
     }
 }
-    function sword() {
-        if (ownedSword == true) {
-            text.innerHTML = `"The sword is a powerful weapon, combining precision and strength in every strike."
-            <br> Element: Basic 
-            <br> ST Increase: 10+
-            <br> AG Increase: 4+
-            <br> DEF Increase: 2+
-            <br> ATK Type: Physical Pierce & Slash
-            `
-            visual.src = "./Images/output.jpg"
+    
+    function gainSlimeSuit() {
+        if (ownedSlime == false) {
+            alert("You have gained the Slime's viscous membrane imbued into powerful drape! DEF+100")
+            def += 100;
+            ownedSlime = true;
+            aquiredRare++
         }
-        else {
-            text.innerHTML = "You do not own this weapon..."
+        else if (ownedSlime == true) {
+            gold += 10000;
+            goldText.textContent = gold;
         }
     }
-    function staff() {
-        if (ownedStaff == true) {
-            text.innerHTML = `"The staff is a magical instrument, harnessing the power of the elements to cast devastating spells."
-            <br> Element: Fire, Wind, Electric, Water, Earth
-            <br> INT Increase: 33+
-            <br> ATK Type: Physical Strike, Magic 
-            `
-            visual.src = "./Images/staff.jpg"
-        } 
-        else {
-            text.innerHTML = "You do not own this weapon..."
+    function gainWolfSoul() {
+        if (ownedWolf == false) {
+            alert("You have gained the wolf's soul! AG+100")
+            agility += 100;
+            ownedWolf = true;
+            aquiredRare++
+        }
+        else if (ownedWolf == true) {
+            gold += 10000;
+            goldText.textContent = gold;
         }
     }
-    function bow() {
-        if (ownedBow == true) {
-            text.innerHTML = `"The bow is a highly versatile weapon, capable of using a variety of arrows to adapt to any combat situation."
-            <br> Element: Versatile 
-            <br> ST Increase: 5+
-            <br> AG Increase: 25+
-            <br> ATK Type: Pierce
-            `
-            visual.src = "./Images/bow.jpg"
-        } 
-        else {
-            text.innerHTML = "You do not own this weapon..."
+    function gainStoneFist() {
+        if (ownedStoneFist == false) {
+            alert("You have gained the Golem's strength imbued into a fist! ST+100")
+            st += 100;
+            ownedStoneFist = true;
+            aquiredRare++
+        }
+        else if (ownedStoneFist == true) {
+            gold += 10000;
+            goldText.textContent = gold;
         }
     }
-
+function gainScepter() {
+    if (ownedScepter == false) {
+        alert("You have gained the magus's scepter! INT+100")
+        int += 100;
+        ownedScepter = true;
+        aquiredRare++
+    }
+    else if (ownedScepter == true) {
+        gold += 10000;
+        goldText.textContent = gold;
+    }
+}
+function gainDetermination() {
+    if (ownedDetermination == false) {
+        alert("You have gained determination! All stats+100")
+        st += 100;
+        agility += 100;
+        def += 100;
+        int += 100;
+        ownedDetermination = true;
+        aquiredRare++
+    }
+}
 
 function gauntlet1(){
     update(locations[3])
@@ -861,6 +1089,9 @@ function enemyEscaped() {
 function fightDragon(){
     levelButton.style.display = "inline"
     inventoryButton.style.display = "inline"
+    intDecimal = (int + 100) / 100;
+    intCritRate = critRate * intDecimal;
+    intCritATK = critATK * intDecimal;
     if (dragonSlayed == false) {
         update(monsters[5])
         monsterStats.style.display = "flex"
