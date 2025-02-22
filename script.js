@@ -31,6 +31,7 @@ let ownedStoneFist = false;
 let ownedDetermination = false;
 let achievedCrit = false;
 let dragonSlayed = false;
+let destroyerSlayed = false;
 
 let invBack = document.createElement("button")
 invBack.textContent = "Back"
@@ -147,6 +148,13 @@ const inventoryDisplay = [
         "button functions": [suit, soul, fist],
         text: "Rare weapon info",
         source: "./Images/square.jpg"
+    },
+    {
+        name: "Key items",
+        "button text": ["Hero's insignia", "Brand of draconic forces", "???"],
+        "button functions": [insignia, brand, destination],
+        text: "Key items info",
+        source: "./Images/square.jpg"
     }
 ]
 
@@ -240,7 +248,7 @@ function attack(monster){
         text.textContent = `ULTRA CRIT! You attacked the creature for ${Math.round(playerDamage)} damage (${sparks.toFixed(2)}x Damage), your damage was negated by ${monster.def}%, the creature hit you for ${(monster.atkPower).toFixed(2)}`;  
     }
     //Monster defeat
-    if (monster.health <= 0 && monster.class != "calamity") {
+    if (monster.health <= 0 && monster.class != "calamity" && monster.class != "destroyer") {
         gold += monster.goldReward;
         goldText.textContent = gold;
         xp += monster.xpReward;
@@ -267,6 +275,17 @@ function attack(monster){
         goTown();
         monster.health = monster.peakHealth
         dragonSlayed = true;
+        aquiredItems++;
+    }
+    if (monster.health <= 0 && monster.class == "destroyer") {
+        gold += monster.goldReward;
+        goldText.textContent = gold;
+        xp += monster.xpReward;
+        xpText.textContent = xp;
+        alert("You have slain the inter dimensional threat known to few as the destroyer. With it's defeat you gain its cosmic core.")
+        goTown();
+        monster.health = monster.peakHealth
+        destroyerSlayed = true;
     }
 }
 
@@ -439,13 +458,13 @@ let monsters = [
         def: 800,
         health: 10000,
         peakHealth: 10000,
-        goldReward: 100000,
-        xpReward: 500000,
+        goldReward: 1000000,
+        xpReward: 5000000,
         baseATKChance: 90,
         agility: 100,
         "button text": ["Attack", "Defend", "Run"],
         "button functions": [() => attack(monsters[6]), () => defend(monsters[6]), run],
-        text: "A destroyer of many worlds stands before you",
+        text: "A destroyer of many galaxies stands before you",
         source: "./Images/destroyer.jpg"
     },
 ]
@@ -850,6 +869,10 @@ function suit() {
         `
         visual.src = "./Images/slime.jpg"
     }
+    else if (ownedSlime == false) {
+        text.innerHTML = `You don't own this artifact`
+        visual.src = "./Images/square.jpg"
+    }
 }
 function soul() {
     if (ownedWolf == true) {
@@ -859,6 +882,10 @@ function soul() {
         <br> ATK Type: Support
         `
         visual.src = "./Images/fanged.jpg"
+    }
+    else if (ownedWolf == false) {
+        text.innerHTML = `You don't own this artifact`
+        visual.src = "./Images/square.jpg"
     }
 }
 function fist() {
@@ -870,11 +897,18 @@ function fist() {
         `
         visual.src = "./Images/golem.jpg"
     }
+    else if (ownedStoneFist == false) {
+        text.innerHTML = `You don't own this artifact`
+        visual.src = "./Images/square.jpg"
+    }
 }
 
 function displayItems(){
     if (aquiredItems <= 0) {
-        text.textContent = `You have no items...`
+        text.textContent = `You have no key items...`
+    }
+    else if (aquiredItems >= 1) {
+        update(inventoryDisplay[2])
     }
 }
 function displayRare(){
@@ -909,6 +943,10 @@ function displayRare(){
                 `
                 visual.src = "./Images/magus.jpg"
             }
+            else if (ownedScepter == false) {
+                text.innerHTML = `You don't own this artifact`
+                visual.src = "./Images/square.jpg"
+            }
         })
 
         determination.addEventListener("click", function() {
@@ -919,6 +957,10 @@ function displayRare(){
                 <br> ATK Type: Support
                 `
                 visual.src = "./Images/dragon.jpg"
+            }
+            else if (ownedDetermination == false) {
+                text.innerHTML = `You don't own this artifact`
+                visual.src = "./Images/square.jpg"
             }
         })
 
@@ -1085,6 +1127,26 @@ function enemyEscaped() {
     goTown();
 }
 
+function insignia() {
+    text.innerHTML = `"An insignia proving your honor as the hero who saved the world."`
+    visual.src = "./Images/Fire.png"
+}
+
+function brand() {
+    text.innerHTML = `"An otherwordly mark placed on your soul upon defeat of the calamity, a call was heard upon this item's gain..."`
+    visual.src = "./Images/dragon.jpg"
+}
+
+function destination() {
+    if (destroyerSlayed == true) {
+        text.innerHTML = `"A glowing relic of cosmic power, gained by triumph over the universal threat, its diminished power serves no benefit to your otherwordly strength, however by tapping into its power you can harness the fabric of space and time and fight once more the plague of reality."`
+        visual.src = "./Images/destroyer.jpg"
+    }
+    else if (destroyerSlayed == false) {
+        text.innerHTML = `You do not own this artifact`
+    }
+}
+
 
 function fightDragon(){
     levelButton.style.display = "inline"
@@ -1106,7 +1168,7 @@ function fightDragon(){
     
         return check = monsters[5]
     }
-    else {
+    else if (dragonSlayed == true){
         update(monsters[6])
         monsterStats.style.display = "flex"
         monsterName.style.display = "flex"
